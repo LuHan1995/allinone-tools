@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAN WebRTC Chat - 局域网传输助手</title>
+    <style>
+        :root { --primary: #007AFF; --bg: #f5f5f7; }
+        body { font-family: system-ui; background: var(--bg); margin: 0; display: flex; height: 100vh; }
+        
+        /* 侧边栏 */
+        #sidebar { width: 300px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .p-3 { padding: 15px; }
+        #peer-list { flex: 1; overflow-y: auto; }
+        .peer-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .peer-item:hover { background: #f0f0f0; }
+
+        /* 主聊天区 */
+        #main { flex: 1; display: flex; flex-direction: column; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 70%; padding: 10px; border-radius: 10px; word-break: break-all; }
+        .msg.me { align-self: flex-end; background: var(--primary); color: white; }
+        .msg.other { align-self: flex-start; background: #e9e9eb; }
+
+        /* 输入区 */
+        #input-area { background: white; padding: 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; }
+        
+        .status-tag { font-size: 12px; color: #666; }
+        #file-input { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div class="p-3">
+        <h3>局域网伙伴</h3>
+        <p class="status-tag">由于浏览器限制，初次连接需手动交换 Token</p>
+        <button onclick="createOffer()">发起连接 (生成我的Token)</button>
+    </div>
+    <div id="peer-list"></div>
+    <div class="p-3">
+        <textarea id="token-io" placeholder="在此粘贴对方的 Token" style="width:100%; height:60px;"></textarea>
+        <button onclick="handleToken()" style="width:100%; margin-top:5px;">接收 Token</button>
+    </div>
+</div>
+
+<div id="main">
+    <div id="chat-box">
+        <div class="msg other">欢迎！由于纯 HTML 无法直接扫描 IP，请点击左侧按钮交换 Token 建立点对点连接。</div>
+    </div>
+    <div id="input-area">
+        <button onclick="document.getElementById('file-input').click()">📁 文件</button>
+        <input type="file" id="file-input">
+        <input type="text" id="msg-input" placeholder="输入消息...">
+        <button onclick="sendText()">发送</button>
+    </div>
+</div>
+
+<script>
+    // WebRTC 配置
+    const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+    let pc = new RTCPeerConnection(config);
+    let dc = null;
+
+    const chatBox = document.getElementById('chat-box');
+    const msgInput = document.getElementById('msg-input');
+    const tokenIO = document.getElementById('token-io');
+
+    // --- WebRTC 核心逻辑 ---
+
+    // 初始化 DataChannel
+    function setupDataChannel() {
+        dc.onopen = () => appendMsg('系统', '连接已建立！可以开始聊天了。', 'other');
+        dc.onmessage = e => {
+            if (typeof e.data === 'string') {
+                const data = JSON.parse(e.data);
+                if(data.type === 'text') appendMsg('伙伴', data.content, 'other');
+                if(data.type === 'file') downloadFile(data);
+            } else {
+                // 处理大文件流
+                handleRawBlob(e.data);
+            }
+        };
+    }
+
+    // 创建发起者 Offer
+    async function createOffer() {
+        dc = pc.createDataChannel("chat");
+        setupDataChannel();
+        
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        pc.onicecandidate = (e) => {
+            if (!e.candidate) {
+                tokenIO.value = btoa(JSON.stringify(pc.localDescription));
+                alert("请复制 Token 给对方！");
+            }
+        };
+    }
+
+    // 处理 Token (Offer 或 Answer)
+    async function handleToken() {
+        const raw = tokenIO.value.trim();
+        if (!raw) return;
+        const desc = new RTCSessionDescription(JSON.parse(atob(raw)));
+
+        if (desc.type === 'offer') {
+            await pc.setRemoteDescription(desc);
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            pc.onicecandidate = (e) => {
+                if (!e.candidate) {
+                    tokenIO.value = btoa(JSON.stringify(pc.localDescription));
+                    alert("请把生成的应答 Token 传回给发起者！");
+                }
+            };
+        } else {
+            await pc.setRemoteDescription(desc);
+        }
+    }
+
+    // 监听被动连接
+    pc.ondatachannel = (e) => {
+        dc = e.channel;
+        setupDataChannel();
+    };
+
+    // --- 功能实现 ---
+
+    function sendText() {
+        const text = msgInput.value;
+        if (!text || !dc) return;
+        dc.send(JSON.stringify({ type: 'text', content: text }));
+        appendMsg('我', text, 'me');
+        msgInput.value = '';
+    }
+
+    function appendMsg(sender, text, cls) {
+        const div = document.createElement('div');
+        div.className = `msg ${cls}`;
+        div.textContent = `${text}`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // 文件发送逻辑 (支持大文件切片)
+    document.getElementById('file-input').onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !dc) return;
+
+        appendMsg('系统', `正在发送文件: ${file.name}...`, 'me');
+        
+        // 发送元数据
+        dc.send(JSON.stringify({
+            type: 'file',
+            name: file.name,
+            size: file.size,
+            mime: file.type
+        }));
+
+        // 分段读取发送 (防止内存溢出)
+        const chunkSize = 16384; 
+        const reader = file.stream().getReader();
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            dc.send(value); // 发送二进制块
+        }
+        appendMsg('系统', `发送完成`, 'me');
+    };
+
+    let incomingFile = null;
+    let receivedSize = 0;
+    let chunks = [];
+
+    function downloadFile(meta) {
+        incomingFile = meta;
+        receivedSize = 0;
+        chunks = [];
+        appendMsg('系统', `正在接收文件: ${meta.name}...`, 'other');
+    }
+
+    function handleRawBlob(data) {
+        chunks.push(data);
+        receivedSize += data.byteLength;
+        if (receivedSize >= incomingFile.size) {
+            const blob = new Blob(chunks, { type: incomingFile.mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = incomingFile.name;
+            a.innerHTML = `<br>✅ 点击下载: ${incomingFile.name}`;
+            chatBox.appendChild(a);
+            incomingFile = null;
+        }
+    }
+</script>
+
+</body>
+</html>
