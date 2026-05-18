@@ -88,6 +88,15 @@ export default {
 
       const brrRaw = xtal / (baud * over);
       const brrInt = Math.round(brrRaw);
+
+      if (brrInt <= 0) {
+        brrEl.textContent = '—';
+        realEl.textContent = '—';
+        errEl.textContent = '波特率过高或晶振频率过低';
+        errEl.style.color = 'var(--danger)';
+        return;
+      }
+
       const realBaud = xtal / (brrInt * over);
       const err = Math.abs(realBaud - baud) / baud * 100;
 

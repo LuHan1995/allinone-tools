@@ -1,9 +1,7 @@
-import { autoUnit, debounce, generateSeries } from '../utils.js';
+import { autoUnit, debounce, generateSeries, R_UNITS } from '../utils.js';
 
 const e24Base = [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
 const e24Series = generateSeries(e24Base, 10000000);
-
-const R_UNITS = { Ω: 1, 'kΩ': 1e3, 'MΩ': 1e6 };
 
 function findClosestE24(val) {
   let best = e24Series[0];

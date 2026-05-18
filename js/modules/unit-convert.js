@@ -10,7 +10,7 @@ const TABS = [
   { key: 'power', label: '功率', units: { μW: 1e-6, mW: 1e-3, W: 1, kW: 1e3, MW: 1e6 } },
   { key: 'time', label: '时间', units: { ps: 1e-12, ns: 1e-9, μs: 1e-6, ms: 1e-3, s: 1, min: 60, h: 3600, d: 86400 } },
   { key: 'length', label: '长度', units: { pm: 1e-12, nm: 1e-9, μm: 1e-6, mm: 1e-3, cm: 1e-2, m: 1, km: 1e3, mil: 25.4e-6, inch: 25.4e-3, ft: 0.3048 } },
-  { key: 'temperature', label: '温度', units: { ℃: 1, ℉: 1, K: 1 } },
+  { key: 'temperature', label: '温度', units: { '℃': 1, '℉': 1, K: 1 } },
 ];
 
 function convertTemp(val, from, to) {

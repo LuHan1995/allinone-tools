@@ -1,8 +1,4 @@
-import { autoUnit, debounce, formatNumber } from '../utils.js';
-
-const L_UNITS = { nH: 1e-9, 'μH': 1e-6, mH: 1e-3, H: 1 };
-const C_UNITS = { pF: 1e-12, nF: 1e-9, 'μF': 1e-6, mF: 1e-3, F: 1 };
-const R_UNITS = { Ω: 1, 'kΩ': 1e3, 'MΩ': 1e6 };
+import { autoUnit, debounce, formatNumber, R_UNITS, C_UNITS, L_UNITS } from '../utils.js';
 
 export default {
   init(container) {

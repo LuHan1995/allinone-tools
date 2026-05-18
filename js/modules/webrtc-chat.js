@@ -83,7 +83,13 @@ export default {
     async function handleToken() {
       const raw = tokenIO.value.trim();
       if (!raw) return;
-      const desc = new RTCSessionDescription(JSON.parse(atob(raw)));
+      let desc;
+      try {
+        desc = new RTCSessionDescription(JSON.parse(atob(raw)));
+      } catch {
+        appendMsg('系统', 'Token 格式错误，请检查粘贴内容', 'other');
+        return;
+      }
       if (desc.type === 'offer') {
         await pc.setRemoteDescription(desc);
         const answer = await pc.createAnswer();

@@ -1,16 +1,18 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_CORE = 'tools-core-' + CACHE_VERSION;
 const CACHE_MODULES = 'tools-modules-' + CACHE_VERSION;
 
 const CORE_ASSETS = [
   './',
   './index.html',
+  './landing.html',
   './manifest.json',
   './css/base.css',
   './css/layout.css',
   './css/components.css',
   './js/app.js',
   './js/utils.js',
+  './js/tools-data.js',
 ];
 
 self.addEventListener('install', (e) => {
@@ -30,9 +32,14 @@ self.addEventListener('activate', (e) => {
       Promise.all(
         keys.filter(k => (k.startsWith('tools-core-') || k.startsWith('tools-modules-')) && !k.endsWith(CACHE_VERSION)).map(k => caches.delete(k))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
+  // Notify all clients that update is ready
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then(clients => {
+      clients.forEach(client => client.postMessage({ type: 'UPDATE_READY' }));
+    })
+  );
 });
 
 self.addEventListener('fetch', (e) => {

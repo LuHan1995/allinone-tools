@@ -1,4 +1,4 @@
-import { calcMicrostripZ0, calcStriplineZ0, debounce, formatNumber } from '../utils.js';
+import { calcMicrostripZ0, calcStriplineZ0, debounce } from '../utils.js';
 
 export default {
   init(container) {
