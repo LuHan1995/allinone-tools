@@ -1,70 +1,32 @@
 import { escapeHtml, storage } from '../utils.js';
 
 const STORAGE_KEY = 'tools_calendar_v1';
+const LUNAR_API = 'https://api.mu-jie.cc/lunar';
 
-const lunarInfo = [
-  0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
-  0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
-  0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
-  0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
-  0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
-  0x06ca0,0x0b550,0x15355,0x04da0,0x0a5d0,0x14573,0x052d0,0x0a9a8,0x0e950,0x06aa0,
-  0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
-  0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b5a0,0x195a6,
-  0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
-  0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,
-  0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
-  0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
-  0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
-  0x05aa0,0x076a3,0x096d0,0x04bd7,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
-  0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0
-];
+const lunarCache = {};
 
-function lYearDays(y) {
-  let i, sum = 348;
-  for (i = 0; i < 12; i++) if ((lunarInfo[y - 1900] >> i) & 0x1) sum += 1;
-  return sum + leapDays(y);
-}
-function leapMonth(y) { return lunarInfo[y - 1900] & 0xf; }
-function leapDays(y) { if (leapMonth(y)) return ((lunarInfo[y - 1900] & 0x10000) ? 30 : 29); return 0; }
-function monthDays(y, m) { return ((lunarInfo[y - 1900] >> (12 - m)) & 0x1) ? 30 : 29; }
-
-function solarToLunar(y, m, d) {
-  const baseDate = new Date(1900, 0, 31);
-  const objDate = new Date(y, m - 1, d);
-  let offset = Math.floor((objDate - baseDate) / 86400000);
-  let i = 1900, temp = 0;
-  for (i = 1900; i < 2051 && offset > 0; i++) {
-    temp = lYearDays(i);
-    if (offset - temp < 0) break;
-    offset -= temp;
-  }
-  let year = i;
-  let leap = leapMonth(year);
-  let isLeap = false;
-  let month = 1;
-  for (i = 1; i < 13 && offset > 0; i++) {
-    if (leap > 0 && i == (leap + 1) && !isLeap) {
-      --i; isLeap = true; temp = leapDays(year);
-    } else {
-      temp = monthDays(year, i);
+async function fetchLunar(iso) {
+  if (lunarCache[iso]) return lunarCache[iso];
+  try {
+    const res = await fetch(`${LUNAR_API}?date=${iso}`);
+    const json = await res.json();
+    if (json.code === 200 && json.data) {
+      const d = json.data;
+      let text = '';
+      if (d.festival) text = d.festival;
+      else if (d.lunarFestival) text = d.lunarFestival;
+      else if (d.Term) text = d.Term;
+      else {
+        if (d.isLeap) text += '闰';
+        text += d.IMonthCn + d.IDayCn;
+      }
+      lunarCache[iso] = text;
+      return text;
     }
-    if (isLeap && i == (leap + 1)) isLeap = false;
-    if (offset - temp < 0) break;
-    offset -= temp;
+  } catch (e) {
+    console.error('农历获取失败', iso, e);
   }
-  month = i; let day = offset + 1;
-  return { lYear: year, lMonth: month, lDay: day, leap: isLeap };
-}
-
-const lunarMonthNames = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '腊'];
-function lunarDayName(d) {
-  const chineseTens = ['初', '十', '廿', '卅'];
-  const nums = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
-  if (d === 10) return '初十';
-  let ten = Math.floor((d - 1) / 10);
-  let one = d % 10;
-  return chineseTens[ten] + (one === 0 ? '十' : nums[one - 1]);
+  return '';
 }
 
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
@@ -141,6 +103,7 @@ export default {
     let curYear = today.getFullYear();
     let curMonth = today.getMonth();
     let curIso = null;
+    let renderId = 0;
 
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     const wkRow = container.querySelector('#cal-weekdays');
@@ -170,16 +133,22 @@ export default {
       return div;
     }
 
-    function render() {
+    async function render() {
+      const myRenderId = ++renderId;
       dateGrid.innerHTML = '';
       ymTitle.textContent = `${curYear} 年 ${curMonth + 1} 月`;
       todayLabel.textContent = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+      fetchLunar(`${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`).then(text => {
+        if (text) todayLabel.textContent += ` 农历${text}`;
+      });
+
       const firstDay = new Date(curYear, curMonth, 1);
       const startWeek = firstDay.getDay();
       const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
       const prevDays = new Date(curYear, curMonth, 0).getDate();
       const events = loadEvents();
 
+      // 上月填充
       for (let i = 0; i < startWeek; i++) {
         const cell = docCell();
         cell.classList.add('out');
@@ -187,18 +156,25 @@ export default {
         cell.querySelector('.date-num').textContent = dateNum;
         let gY = curMonth === 0 ? curYear - 1 : curYear;
         let gM = curMonth === 0 ? 12 : curMonth;
-        if (gY < 1900) { gY = 1900; gM = 1; }
-        const lunar = solarToLunar(gY, gM, dateNum);
-        cell.querySelector('.lunar').textContent = `${lunar.leap ? '闰' : ''}${lunarMonthNames[lunar.lMonth - 1]}月 ${lunarDayName(lunar.lDay)}`;
+        if (gY >= 1900 && gY <= 2049) {
+          const iso = `${gY}-${pad(gM)}-${pad(dateNum)}`;
+          fetchLunar(iso).then(text => {
+            if (renderId !== myRenderId) return;
+            cell.querySelector('.lunar').textContent = text;
+          });
+        }
         dateGrid.appendChild(cell);
       }
 
+      // 当月
       for (let d = 1; d <= daysInMonth; d++) {
         const cell = docCell();
         cell.querySelector('.date-num').textContent = d;
-        const lunar = solarToLunar(curYear, curMonth + 1, d);
-        cell.querySelector('.lunar').textContent = `${lunar.leap ? '闰' : ''}${lunarMonthNames[lunar.lMonth - 1]}月 ${lunarDayName(lunar.lDay)}`;
         const iso = `${curYear}-${pad(curMonth + 1)}-${pad(d)}`;
+        fetchLunar(iso).then(text => {
+          if (renderId !== myRenderId) return;
+          cell.querySelector('.lunar').textContent = text;
+        });
         const dayEvents = events[iso] || [];
         const dotEl = cell.querySelector('.dot');
         if (dayEvents.length) dotEl.classList.add('has'); else dotEl.classList.remove('has');
@@ -209,6 +185,7 @@ export default {
         dateGrid.appendChild(cell);
       }
 
+      // 下月填充
       const totalCells = startWeek + daysInMonth;
       const nextFill = (7 - (totalCells % 7)) % 7;
       for (let i = 1; i <= nextFill; i++) {
@@ -217,9 +194,13 @@ export default {
         cell.querySelector('.date-num').textContent = i;
         let gY = curMonth === 11 ? curYear + 1 : curYear;
         let gM = curMonth === 11 ? 1 : curMonth + 2;
-        if (gY > 2049) { gY = 2049; gM = 12; }
-        const lunar = solarToLunar(gY, gM, i);
-        cell.querySelector('.lunar').textContent = `${lunar.leap ? '闰' : ''}${lunarMonthNames[lunar.lMonth - 1]}月 ${lunarDayName(lunar.lDay)}`;
+        if (gY >= 1900 && gY <= 2049) {
+          const iso = `${gY}-${pad(gM)}-${pad(i)}`;
+          fetchLunar(iso).then(text => {
+            if (renderId !== myRenderId) return;
+            cell.querySelector('.lunar').textContent = text;
+          });
+        }
         dateGrid.appendChild(cell);
       }
     }
