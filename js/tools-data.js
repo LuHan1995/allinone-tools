@@ -32,6 +32,10 @@ export const MODULES = {
   'dcdc-calc': { name: 'Buck/Boost 计算器', category: 'circuit', icon: '🔋', desc: '开关电源电感、电容、纹波电流计算', file: 'modules/dcdc-calc.js' },
   'mosfet-loss': { name: 'MOSFET 损耗', category: 'circuit', icon: '🔥', desc: '导通损耗、开关损耗、驱动损耗估算', file: 'modules/mosfet-loss.js' },
   'i2c-pullup': { name: 'I2C 上拉电阻', category: 'embedded', icon: '🔗', desc: 'I2C 总线上拉电阻选型和总线电容估算', file: 'modules/i2c-pullup.js' },
+  'smps-transformer': { name: '隔离电源变压器', category: 'circuit', icon: '🔌', desc: '反激/正激/推挽拓扑匝比、电感、磁芯选型计算', file: 'modules/smps-transformer.js' },
+  'signal-chain': { name: '信号链精度分析', category: 'signal', icon: '📊', desc: 'ADC/DAC 信号链噪声、INL/DNL、ENOB 与电压精度计算', file: 'modules/signal-chain.js' },
+  'termination': { name: '端接电阻计算', category: 'signal', icon: '🔚', desc: '串联/并联/Thevenin/AC/差分端接电阻选型与SI计算', file: 'modules/termination.js' },
+  'length-match': { name: '等长Layout查询', category: 'pcb', icon: '📏', desc: '高速接口等长要求速查与层叠等长补偿计算', file: 'modules/length-match.js' },
   'settings': { name: '设置', category: 'general', icon: '⚙️', desc: '主题、数据管理与关于', file: 'modules/settings.js' },
 };
 

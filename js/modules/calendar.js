@@ -49,6 +49,28 @@ export default {
           <p class="tool-desc">公历、农历与本地日程管理，支持导出/导入 JSON</p>
         </div>
       </div>
+      <div class="card" id="weather-card" style="display:none;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div id="weather-current" style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px;">
+            <span id="weather-icon" style="font-size:32px;">🌡️</span>
+            <div>
+              <div style="font-size:20px;font-weight:700;"><span id="weather-temp">--</span>°C <span id="weather-desc" style="font-size:14px;font-weight:400;color:var(--text-secondary);">--</span></div>
+              <div style="font-size:12px;color:var(--text-secondary);"><span id="weather-city">--</span> · 风速 <span id="weather-wind">--</span> km/h</div>
+            </div>
+          </div>
+          <div id="weather-forecast" style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;"></div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-secondary" id="weather-toggle-city" style="padding:6px 10px;font-size:12px;white-space:nowrap;" title="手动选择城市">📍 切换城市</button>
+            <div id="weather-manual" style="display:none;gap:8px;align-items:center;">
+              <input type="text" id="weather-city-input" placeholder="输入城市名" style="width:120px;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);" />
+              <button class="btn" id="weather-search" style="padding:6px 12px;font-size:12px;">查询</button>
+            </div>
+            <button class="btn btn-secondary" id="weather-refresh" style="padding:6px 10px;font-size:12px;" title="刷新天气/重新定位">🔄</button>
+          </div>
+        </div>
+        <div id="weather-error" style="display:none;margin-top:8px;font-size:12px;color:var(--danger);"></div>
+      </div>
+
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
           <div style="display:flex;align-items:center;gap:8px;">
@@ -310,6 +332,147 @@ export default {
     });
 
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    // ==================== 天气功能 ====================
+    const WMO_MAP = {
+      0: { icon: '☀️', desc: '晴' },
+      1: { icon: '🌤️', desc: '多云' }, 2: { icon: '⛅', desc: '阴' }, 3: { icon: '☁️', desc: '阴天' },
+      45: { icon: '🌫️', desc: '雾' }, 48: { icon: '🌫️', desc: '雾凇' },
+      51: { icon: '🌧️', desc: '毛毛雨' }, 53: { icon: '🌧️', desc: '小雨' }, 55: { icon: '🌧️', desc: '中雨' },
+      56: { icon: '🌧️', desc: '冻雨' }, 57: { icon: '🌧️', desc: '冻雨' },
+      61: { icon: '🌧️', desc: '小雨' }, 63: { icon: '🌧️', desc: '中雨' }, 65: { icon: '🌧️', desc: '大雨' },
+      66: { icon: '🌧️', desc: '冻雨' }, 67: { icon: '🌧️', desc: '冻雨' },
+      71: { icon: '❄️', desc: '小雪' }, 73: { icon: '❄️', desc: '中雪' }, 75: { icon: '❄️', desc: '大雪' },
+      77: { icon: '❄️', desc: '雪粒' },
+      80: { icon: '🌦️', desc: '阵雨' }, 81: { icon: '🌦️', desc: '阵雨' }, 82: { icon: '🌦️', desc: '强阵雨' },
+      85: { icon: '❄️', desc: '阵雪' }, 86: { icon: '❄️', desc: '阵雪' },
+      95: { icon: '⛈️', desc: '雷阵雨' }, 96: { icon: '⛈️', desc: '雷暴伴冰雹' }, 99: { icon: '⛈️', desc: '强雷暴' },
+    };
+
+    const weatherCard = container.querySelector('#weather-card');
+    const weatherError = container.querySelector('#weather-error');
+    const weatherManual = container.querySelector('#weather-manual');
+
+    function getWeatherCache() {
+      try {
+        const raw = localStorage.getItem('tools_weather_v1');
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (Date.now() - data.updatedAt > 30 * 60 * 1000) return null; // 30min
+        return data;
+      } catch { return null; }
+    }
+    function setWeatherCache(data) {
+      try { localStorage.setItem('tools_weather_v1', JSON.stringify({ ...data, updatedAt: Date.now() })); } catch {}
+    }
+
+    function fetchWithTimeout(url, ms) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+    }
+
+    async function fetchWeather(lat, lon, cityName) {
+      weatherError.style.display = 'none';
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto`;
+        const res = await fetchWithTimeout(url, 8000);
+        if (!res.ok) throw new Error('天气服务异常');
+        const json = await res.json();
+        const payload = { lat, lon, city: cityName || `${lat.toFixed(2)}, ${lon.toFixed(2)}`, current: json.current_weather, daily: json.daily };
+        setWeatherCache(payload);
+        renderWeather(payload);
+      } catch (err) {
+        weatherError.textContent = '天气获取失败：' + (err.message || '网络超时');
+        weatherError.style.display = 'block';
+        weatherManual.style.display = 'flex';
+      }
+    }
+
+    function renderWeather(data) {
+      if (!data || !data.current) return;
+      weatherCard.style.display = 'block';
+      weatherManual.style.display = 'none';
+      const code = data.current.weathercode ?? 0;
+      const info = WMO_MAP[code] || { icon: '🌡️', desc: '未知' };
+      container.querySelector('#weather-icon').textContent = info.icon;
+      container.querySelector('#weather-temp').textContent = data.current.temperature;
+      container.querySelector('#weather-desc').textContent = info.desc;
+      container.querySelector('#weather-city').textContent = data.city || '本地';
+      container.querySelector('#weather-wind').textContent = data.current.windspeed ?? '--';
+
+      const forecastEl = container.querySelector('#weather-forecast');
+      const daily = data.daily;
+      if (daily && daily.time && daily.time.length > 1) {
+        let html = '';
+        for (let i = 1; i <= Math.min(3, daily.time.length - 1); i++) {
+          const c = daily.weathercode[i] ?? 0;
+          const inf = WMO_MAP[c] || { icon: '🌡️', desc: '' };
+          html += `<div style="text-align:center;min-width:56px;"><div style="font-size:16px;">${inf.icon}</div><div style="font-size:11px;color:var(--text-secondary);">${Math.round(daily.temperature_2m_min[i])}°/${Math.round(daily.temperature_2m_max[i])}°</div></div>`;
+        }
+        forecastEl.innerHTML = html;
+      }
+    }
+
+    async function getLocation() {
+      const cache = getWeatherCache();
+      if (cache) { renderWeather(cache); return; }
+
+      if (!navigator.geolocation) {
+        weatherError.textContent = '浏览器不支持定位，请手动输入城市';
+        weatherError.style.display = 'block';
+        weatherManual.style.display = 'flex';
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { fetchWeather(pos.coords.latitude, pos.coords.longitude); },
+        (err) => {
+          weatherError.textContent = '定位失败：' + (err.message || '权限拒绝') + '，请手动输入城市';
+          weatherError.style.display = 'block';
+          weatherManual.style.display = 'flex';
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+      );
+    }
+
+    async function searchCity(city) {
+      if (!city.trim()) return;
+      weatherError.style.display = 'none';
+      try {
+        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh`;
+        const res = await fetchWithTimeout(url, 8000);
+        const json = await res.json();
+        if (!json.results || !json.results.length) {
+          weatherError.textContent = '未找到城市：' + city;
+          weatherError.style.display = 'block';
+          return;
+        }
+        const r = json.results[0];
+        fetchWeather(r.latitude, r.longitude, r.name);
+      } catch (err) {
+        weatherError.textContent = '城市搜索失败：' + (err.message || '网络超时');
+        weatherError.style.display = 'block';
+      }
+    }
+
+    container.querySelector('#weather-toggle-city').addEventListener('click', () => {
+      const manual = container.querySelector('#weather-manual');
+      manual.style.display = manual.style.display === 'none' ? 'flex' : 'none';
+      if (manual.style.display === 'flex') container.querySelector('#weather-city-input').focus();
+    });
+    container.querySelector('#weather-refresh').addEventListener('click', () => {
+      localStorage.removeItem('tools_weather_v1');
+      getLocation();
+    });
+    container.querySelector('#weather-search').addEventListener('click', () => {
+      const city = container.querySelector('#weather-city-input').value;
+      searchCity(city);
+    });
+    container.querySelector('#weather-city-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') searchCity(e.currentTarget.value);
+    });
+
+    getLocation();
 
     render();
   }

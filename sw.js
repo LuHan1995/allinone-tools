@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_CORE = 'tools-core-' + CACHE_VERSION;
 const CACHE_MODULES = 'tools-modules-' + CACHE_VERSION;
 

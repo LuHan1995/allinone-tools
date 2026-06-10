@@ -120,3 +120,46 @@ export function formatNumber(num, maxDecimals = 4) {
 export function escapeHtml(str) {
   return (str || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
+
+// ========== 物理常量与噪声计算 ==========
+
+export const PHYSICAL = {
+  k: 1.380649e-23,    // 玻尔兹曼常数 J/K
+  T0: 300,            // 室温 K (27°C)
+  q: 1.602176634e-19, // 元电荷 C
+};
+
+/** 一阶系统噪声等效带宽 = BW_3dB × π/2 */
+export function equivNoiseBW(bw3db) {
+  return bw3db * Math.PI / 2;
+}
+
+/** 热噪声电压 Vn = sqrt(4kTRB)，单位：Vrms */
+export function thermalNoise(R, T, bw) {
+  return Math.sqrt(4 * PHYSICAL.k * T * R * bw);
+}
+
+/** RSS 叠加：sqrt(v1² + v2² + ...) */
+export function rss(values) {
+  return Math.sqrt(values.reduce((s, v) => s + v * v, 0));
+}
+
+/** 基于总噪声 RMS 和满量程计算 ENOB */
+export function calcENOB(vfs, noiseRms) {
+  if (!vfs || !noiseRms || noiseRms <= 0) return 0;
+  return Math.log2(vfs / (noiseRms * 2 * Math.sqrt(3)));
+}
+
+/** 无噪声分辨率 NFCR = log2(VFS / Vn_pp)，Vn_pp 通常取 6.6×RMS */
+export function calcNFCR(vfs, noiseRms) {
+  if (!vfs || !noiseRms || noiseRms <= 0) return 0;
+  const vpp = noiseRms * 6.6;
+  return Math.log2(vfs / vpp);
+}
+
+/** 将数值格式化为科学计数法或自动单位 */
+export function formatWithUnit(value, type, maxDecimals = 3) {
+  const au = autoUnit(value, type);
+  if (!au.unit) return formatNumber(value, maxDecimals);
+  return formatNumber(au.value, maxDecimals) + ' ' + au.unit;
+}
