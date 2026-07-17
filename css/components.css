@@ -440,3 +440,77 @@ table.data-table tr.best {
     display: none;
   }
 }
+
+/* 登录门 */
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 36px 32px;
+  width: min(360px, 92vw);
+  text-align: center;
+}
+
+.auth-logo {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.auth-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.auth-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  font-size: 14px;
+  outline: none;
+  text-align: center;
+}
+
+.auth-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.auth-error {
+  min-height: 20px;
+  margin: 6px 0 10px;
+  font-size: 13px;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.auth-btn {
+  width: 100%;
+}
+
+/* 锁定状态隐藏主界面 */
+body.auth-locked .sidebar,
+body.auth-locked .app-wrapper,
+body.auth-locked .overlay {
+  display: none;
+}

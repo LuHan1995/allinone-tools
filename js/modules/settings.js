@@ -1,4 +1,5 @@
 import { escapeHtml } from '../utils.js';
+import { changePassword, logout } from '../auth.js';
 
 export default {
   init(container) {
@@ -49,6 +50,25 @@ export default {
           </label>
           <button class="btn btn-success" id="set-import-confirm" style="margin-top:12px;">确认导入</button>
         </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <h2 style="font-size:16px;margin-bottom:16px;">🔐 安全</h2>
+        <div class="grid-2" style="gap:12px;">
+          <div class="input-group" style="margin-bottom:12px;">
+            <label>当前口令</label>
+            <input type="password" id="set-pwd-old" autocomplete="current-password" />
+          </div>
+          <div class="input-group" style="margin-bottom:12px;">
+            <label>新口令（至少 4 位）</label>
+            <input type="password" id="set-pwd-new" autocomplete="new-password" />
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button class="btn" id="set-pwd-change">修改口令</button>
+          <button class="btn btn-danger" id="set-logout">退出登录</button>
+        </div>
+        <div id="set-pwd-msg" style="margin-top:12px;font-weight:600;min-height:20px;font-size:13px;"></div>
       </div>
 
       <div class="card" style="margin-bottom:20px;">
@@ -191,6 +211,24 @@ export default {
           }
         } catch {}
         renderRecent();
+      }
+    });
+
+    // Security: change password & logout
+    const pwdOld = container.querySelector('#set-pwd-old');
+    const pwdNew = container.querySelector('#set-pwd-new');
+    const pwdMsg = container.querySelector('#set-pwd-msg');
+
+    container.querySelector('#set-pwd-change').addEventListener('click', () => {
+      const result = changePassword(pwdOld.value, pwdNew.value);
+      pwdMsg.textContent = result.msg;
+      pwdMsg.style.color = result.ok ? 'var(--success)' : 'var(--danger)';
+      if (result.ok) { pwdOld.value = ''; pwdNew.value = ''; }
+    });
+
+    container.querySelector('#set-logout').addEventListener('click', () => {
+      if (confirm('确定退出登录吗？下次访问需要重新输入口令。')) {
+        logout();
       }
     });
 

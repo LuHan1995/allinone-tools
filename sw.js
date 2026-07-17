@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_CORE = 'tools-core-' + CACHE_VERSION;
 const CACHE_MODULES = 'tools-modules-' + CACHE_VERSION;
 
@@ -13,6 +13,7 @@ const CORE_ASSETS = [
   './js/app.js',
   './js/utils.js',
   './js/tools-data.js',
+  './js/auth.js',
 ];
 
 self.addEventListener('install', (e) => {

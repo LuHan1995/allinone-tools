@@ -1,5 +1,6 @@
 import { escapeHtml } from './utils.js';
 import { MODULES, CATEGORY_LABELS } from './tools-data.js';
+import { isAuthed, login } from './auth.js';
 
 // Simple pinyin initial map for tool name matching
 const PINYIN_MAP = {
@@ -37,6 +38,7 @@ const PINYIN_MAP = {
   '采': 'c', '集': 'j', '输': 's', '出': 'c',
   '端': 'd', '接': 'j', '匹': 'p', '配': 'p', '反': 'f', '射': 's', '终': 'z',
   '等': 'd', '长': 'c', '布': 'b', '局': 'j', '绕': 'r', '线': 'x', '补': 'b', '偿': 'c',
+  '知': 'z', '识': 's', '库': 'k', '硬': 'y',
 };
 
 function getPinyinInitials(str) {
@@ -314,7 +316,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Init
-document.addEventListener('DOMContentLoaded', () => {
+function bootApp() {
   initTheme();
   renderNav();
 
@@ -356,4 +358,40 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+}
+
+// Auth gate: 未登录先显示口令门，验证通过后再启动应用
+document.addEventListener('DOMContentLoaded', () => {
+  const gate = document.getElementById('auth-gate');
+  const input = document.getElementById('auth-input');
+  const errorEl = document.getElementById('auth-error');
+
+  if (isAuthed()) {
+    if (gate) gate.style.display = 'none';
+    document.body.classList.remove('auth-locked');
+    bootApp();
+    return;
+  }
+
+  // 未登录：显示登录门（inline 脚本可能已显示，这里兜底并锁定主界面）
+  if (gate) gate.style.display = 'flex';
+  document.body.classList.add('auth-locked');
+  if (input) input.focus();
+
+  function tryLogin() {
+    if (login(input.value)) {
+      gate.style.display = 'none';
+      document.body.classList.remove('auth-locked');
+      bootApp();
+    } else {
+      errorEl.textContent = '口令错误，请重试';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  document.getElementById('auth-submit').addEventListener('click', tryLogin);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') tryLogin();
+  });
 });

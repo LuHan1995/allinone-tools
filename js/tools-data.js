@@ -36,6 +36,7 @@ export const MODULES = {
   'signal-chain': { name: '信号链精度分析', category: 'signal', icon: '📊', desc: 'ADC/DAC 信号链噪声、INL/DNL、ENOB 与电压精度计算', file: 'modules/signal-chain.js' },
   'termination': { name: '端接电阻计算', category: 'signal', icon: '🔚', desc: '串联/并联/Thevenin/AC/差分端接电阻选型与SI计算', file: 'modules/termination.js' },
   'length-match': { name: '等长Layout查询', category: 'pcb', icon: '📏', desc: '高速接口等长要求速查与层叠等长补偿计算', file: 'modules/length-match.js' },
+  'knowledge': { name: '硬件知识库', category: 'general', icon: '📚', desc: '人人都能学硬件 · ima 共享知识库', file: 'modules/knowledge.js' },
   'settings': { name: '设置', category: 'general', icon: '⚙️', desc: '主题、数据管理与关于', file: 'modules/settings.js' },
 };
 

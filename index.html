@@ -11,6 +11,28 @@
   <!-- focus styles moved to css/layout.css -->
 </head>
 <body>
+  <div id="auth-gate" class="auth-gate" style="display:none;">
+    <div class="auth-panel">
+      <div class="auth-logo">🛠️</div>
+      <h1 class="auth-title">鲁工不要慌工具箱</h1>
+      <p class="auth-sub">请输入访问口令</p>
+      <input type="password" id="auth-input" class="auth-input" placeholder="访问口令" autocomplete="current-password" />
+      <div id="auth-error" class="auth-error"></div>
+      <button class="btn auth-btn" id="auth-submit">进入工具箱</button>
+    </div>
+  </div>
+  <script>
+    // 防闪现：无登录 token 时立即显示登录门（严格校验在 app.js 进行）
+    (function () {
+      try {
+        if (!localStorage.getItem('tools_auth_token')) {
+          document.getElementById('auth-gate').style.display = 'flex';
+          document.body.classList.add('auth-locked');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-header">
       <div class="brand">🛠️ 鲁工不要慌</div>
