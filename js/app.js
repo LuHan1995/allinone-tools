@@ -1,47 +1,5 @@
 import { escapeHtml } from './utils.js';
-const MODULES = {
-  'calendar': { name: '万年历', category: 'general', icon: '📅', desc: '公历、农历与本地日程管理', file: 'modules/calendar.js' },
-  'divider': { name: '分压计算器', category: 'circuit', icon: '⚡', desc: 'E24/E96穷举最优分压电阻', file: 'modules/divider.js' },
-  'risetime': { name: '上升时间转换', category: 'circuit', icon: '📡', desc: 'Tr与带宽双向换算', file: 'modules/risetime.js' },
-  'current': { name: '载流计算', category: 'pcb', icon: '📟', desc: 'IPC-2221走线与过孔载流', file: 'modules/current.js' },
-  'impedance': { name: '阻抗计算', category: 'pcb', icon: '🔌', desc: '微带线/带状线特征阻抗', file: 'modules/impedance.js' },
-  'pcb-spec': { name: 'PCB工艺规范', category: 'pcb', icon: '📋', desc: '生成PCB制作工艺单', file: 'modules/pcb-spec.js' },
-  'webrtc-chat': { name: '局域网传文件', category: 'network', icon: '🌐', desc: 'WebRTC点对点传输', file: 'modules/webrtc-chat.js' },
-  'serial': { name: '串口助手', category: 'network', icon: '🔌', desc: '串口调试工具', external: true },
-  'ohms-law': { name: '欧姆定律', category: 'circuit', icon: '⚡', desc: 'V/I/R/P 四选二自动计算', file: 'modules/ohms-law.js' },
-  'led-resistor': { name: 'LED 限流电阻', category: 'circuit', icon: '💡', desc: 'LED 限流电阻与功率计算', file: 'modules/led-resistor.js' },
-  'resonance': { name: '谐振频率', category: 'circuit', icon: '📡', desc: 'LC/RC/RL 谐振与截止频率', file: 'modules/resonance.js' },
-  'r-c-series': { name: '串并联 R/C', category: 'circuit', icon: '🔗', desc: '电阻电容串并联等效计算', file: 'modules/r-c-series.js' },
-  'db-convert': { name: 'dB 换算器', category: 'signal', icon: '📶', desc: 'dBm/dBW/W/V 互转', file: 'modules/db-convert.js' },
-  'adc-calc': { name: 'ADC/DAC 分辨率', category: 'embedded', icon: '🔢', desc: 'ADC 分辨率、LSB、SNR 计算', file: 'modules/adc-calc.js' },
-  'opamp-gain': { name: '运放增益', category: 'circuit', icon: '🔺', desc: '反相/同相/差分放大器增益', file: 'modules/opamp-gain.js' },
-  'power-eff': { name: '电源效率', category: 'circuit', icon: '🔋', desc: '线性/LDO 与 DC-DC 效率计算', file: 'modules/power-eff.js' },
-  'filter': { name: '滤波器波特图', category: 'signal', icon: '📉', desc: 'RC/RL/LC 滤波器截止频率', file: 'modules/filter.js' },
-  'pwm-timer': { name: 'PWM 定时器', category: 'embedded', icon: '⏱️', desc: 'MCU PWM 频率与分辨率计算', file: 'modules/pwm-timer.js' },
-  // Phase 3
-  'resistor-color': { name: '电阻色环识别', category: 'circuit', icon: '🎨', desc: '4/5/6环电阻读值与反查', file: 'modules/resistor-color.js' },
-  'unit-convert': { name: '单位换算器', category: 'general', icon: '🔄', desc: '电学常用单位快速换算', file: 'modules/unit-convert.js' },
-  'thermal': { name: '热阻/散热计算', category: 'circuit', icon: '🌡️', desc: '根据功耗和热阻估算结温', file: 'modules/thermal.js' },
-  'battery': { name: '电池续航估算', category: 'circuit', icon: '🔋', desc: '估算电池续航时间', file: 'modules/battery.js' },
-  'crc': { name: 'CRC 校验工具', category: 'embedded', icon: '✅', desc: '计算 CRC8/16/32', file: 'modules/crc.js' },
-  'base-convert': { name: '进制/编码转换', category: 'general', icon: '🔡', desc: '多进制和编码互转', file: 'modules/base-convert.js' },
-  'baud-error': { name: '波特率误差计算', category: 'embedded', icon: '📟', desc: '晶振频率与波特率误差', file: 'modules/baud-error.js' },
-  'crystal-load': { name: '晶振负载电容', category: 'circuit', icon: '💎', desc: '晶振外部匹配电容计算', file: 'modules/crystal-load.js' },
-  'diff-impedance': { name: '差分阻抗计算器', category: 'pcb', icon: '⚡', desc: '差分微带线/带状线阻抗', file: 'modules/diff-impedance.js' },
-  'settings': { name: '设置', category: 'general', icon: '⚙️', desc: '主题、数据管理与关于', file: 'modules/settings.js' },
-};
-
-// Expose for settings module
-window.MODULES = MODULES;
-
-const CATEGORY_LABELS = {
-  general: '📅 通用',
-  circuit: '⚡ 电路',
-  pcb: '📟 PCB',
-  network: '🌐 网络',
-  signal: '📶 信号',
-  embedded: '🔢 嵌入式',
-};
+import { MODULES, CATEGORY_LABELS } from './tools-data.js';
 
 // Simple pinyin initial map for tool name matching
 const PINYIN_MAP = {
@@ -119,6 +77,43 @@ function recordRecent(id) {
   try { localStorage.setItem(key, JSON.stringify(list)); } catch {}
 }
 
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem('tools_favorites') || '[]'); } catch { return []; }
+}
+
+function toggleFavorite(id) {
+  let list = getFavorites();
+  if (list.includes(id)) {
+    list = list.filter(x => x !== id);
+  } else {
+    list.push(id);
+  }
+  try { localStorage.setItem('tools_favorites', JSON.stringify(list)); } catch {}
+  renderNav();
+}
+
+function createNavItem(item, favorites) {
+  const el = document.createElement('div');
+  el.className = 'nav-item';
+  el.dataset.id = item.id;
+  const isFav = favorites.includes(item.id);
+  el.innerHTML = `<span class="nav-icon">${item.icon}</span><span class="nav-text">${item.name}</span><span class="nav-fav" title="${isFav ? '取消收藏' : '收藏'}">${isFav ? '★' : '☆'}</span>`;
+  el.addEventListener('click', (e) => {
+    if (e.target.closest('.nav-fav')) {
+      e.stopPropagation();
+      toggleFavorite(item.id);
+      return;
+    }
+    if (item.external) {
+      navigateTo(item.id);
+    } else {
+      location.hash = item.id;
+      if (window.innerWidth <= 768) closeSidebar();
+    }
+  });
+  return el;
+}
+
 function renderNav(filter = '') {
   const nav = document.getElementById('nav-list');
   nav.innerHTML = '';
@@ -138,27 +133,55 @@ function renderNav(filter = '') {
 
   if (f) {
     // Flat list with keyword highlight
-    for (const item of matched) {
-      const el = document.createElement('div');
-      el.className = 'nav-item';
-      el.dataset.id = item.id;
-      const nameHtml = highlightText(item.name, filter);
-      const descHtml = item.desc ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${highlightText(item.desc, filter)}</div>` : '';
-      el.innerHTML = `<span class="nav-icon">${item.icon}</span><div class="nav-text"><div>${nameHtml}</div>${descHtml}</div>`;
-      el.addEventListener('click', () => {
-        if (item.external) {
-          navigateTo(item.id);
-        } else {
-          location.hash = item.id;
-          if (window.innerWidth <= 768) closeSidebar();
-        }
-      });
-      nav.appendChild(el);
+    if (matched.length === 0) {
+      const emptyWrap = document.createElement('div');
+      emptyWrap.style.cssText = 'text-align:center;padding:24px 16px;';
+
+      const emptyText = document.createElement('div');
+      emptyText.style.color = 'var(--text-secondary)';
+      emptyText.textContent = '未找到相关工具';
+      emptyWrap.appendChild(emptyText);
+
+      const searchInput = document.getElementById('tool-search');
+      if (searchInput && searchInput.value.trim()) {
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'btn';
+        clearBtn.style.marginTop = '12px';
+        clearBtn.textContent = '清除搜索';
+        clearBtn.addEventListener('click', () => {
+          searchInput.value = '';
+          renderNav('');
+        });
+        emptyWrap.appendChild(clearBtn);
+      }
+
+      nav.appendChild(emptyWrap);
+    } else {
+      const favorites = getFavorites();
+      for (const item of matched) {
+        const el = createNavItem(item, favorites);
+        const nameHtml = highlightText(item.name, filter);
+        const descHtml = item.desc ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${highlightText(item.desc, filter)}</div>` : '';
+        el.querySelector('.nav-text').innerHTML = `<div>${nameHtml}</div>${descHtml}`;
+        nav.appendChild(el);
+      }
     }
   } else {
+    const favorites = getFavorites();
+    const favItems = matched.filter(item => favorites.includes(item.id));
+    if (favItems.length) {
+      const favLabel = document.createElement('div');
+      favLabel.className = 'nav-category';
+      favLabel.textContent = '⭐ 收藏';
+      nav.appendChild(favLabel);
+      for (const item of favItems) {
+        nav.appendChild(createNavItem(item, favorites));
+      }
+    }
     // Grouped by category
     const groups = {};
     for (const item of matched) {
+      if (favorites.includes(item.id)) continue;
       const cat = item.category;
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(item);
@@ -169,19 +192,7 @@ function renderNav(filter = '') {
       catLabel.textContent = CATEGORY_LABELS[cat] || cat;
       nav.appendChild(catLabel);
       for (const item of items) {
-        const el = document.createElement('div');
-        el.className = 'nav-item';
-        el.dataset.id = item.id;
-        el.innerHTML = `<span class="nav-icon">${item.icon}</span><span class="nav-text">${item.name}</span>`;
-        el.addEventListener('click', () => {
-          if (item.external) {
-            navigateTo(item.id);
-          } else {
-            location.hash = item.id;
-            if (window.innerWidth <= 768) closeSidebar();
-          }
-        });
-        nav.appendChild(el);
+        nav.appendChild(createNavItem(item, favorites));
       }
     }
   }
@@ -208,11 +219,18 @@ function navigateTo(hash) {
   if (!mod) return;
 
   setActiveNav(id);
-  document.title = `${mod.name} — All-in-One 工程师工具箱`;
+  document.title = `${mod.name} — 鲁工不要慌工具箱`;
   document.getElementById('page-title').textContent = mod.name;
 
   const container = document.getElementById('app-main');
-  container.innerHTML = '';
+  container.innerHTML = `
+    <div class="skeleton-wrapper">
+      <div class="skeleton-header"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  `;
   if (currentModule && typeof currentModule.destroy === 'function') {
     try { currentModule.destroy(); } catch (e) { console.error(e); }
   }
@@ -220,14 +238,28 @@ function navigateTo(hash) {
   delete window._openHelpModal;
 
   if (mod.external) {
+    const isElectron = typeof window !== 'undefined' && window.electronAPI && window.electronAPI.isElectron;
     container.innerHTML = `
       <div class="card" style="text-align:center;padding:48px 24px;">
         <div style="font-size:48px;margin-bottom:16px;">🔌</div>
         <h2 style="margin-bottom:12px;">串口助手</h2>
-        <p style="color:var(--text-secondary);margin-bottom:24px;">串口助手为 Windows 可执行程序，请直接运行 ref/串口助手.exe。<br>未来计划支持 WebSerial API。</p>
-        <button class="btn" onclick="alert('请直接运行 ref/串口助手.exe')">我知道了</button>
+        <p style="color:var(--text-secondary);margin-bottom:24px;">串口助手为 Windows 可执行程序。${isElectron ? '<br>点击下方按钮直接启动。' : '<br>请直接运行 ref/串口助手.exe。<br>未来计划支持 WebSerial API。'}</p>
+        <button class="btn" id="serial-launch-btn">${isElectron ? '启动串口助手' : '我知道了'}</button>
       </div>
     `;
+    const btn = document.getElementById('serial-launch-btn');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        if (isElectron) {
+          const result = await window.electronAPI.openSerial();
+          if (!result.success) {
+            alert(result.error || '启动失败');
+          }
+        } else {
+          alert('请直接运行 ref/串口助手.exe');
+        }
+      });
+    }
     recordRecent(id);
     return;
   }
@@ -264,7 +296,7 @@ function closeSidebar() {
 }
 
 function onHashChange() {
-  const hash = location.hash.slice(1) || 'calendar';
+  const hash = location.hash.slice(1) || 'home';
   navigateTo(hash);
 }
 
@@ -339,4 +371,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const actual = saved === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : saved;
     updateThemeIcon(actual);
   });
+
+  // Listen for SW update ready
+  if ('serviceWorker' in navigator && !(window.electronAPI && window.electronAPI.isElectron)) {
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'UPDATE_READY') {
+        const toast = document.getElementById('update-toast');
+        if (toast) toast.classList.add('show');
+      }
+    });
+  }
 });

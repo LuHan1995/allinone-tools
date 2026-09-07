@@ -1,4 +1,4 @@
-import { autoUnit, debounce, formatNumber } from '../utils.js';
+import { debounce } from '../utils.js';
 
 export default {
   init(container) {

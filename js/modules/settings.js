@@ -62,7 +62,7 @@ export default {
         <div style="line-height:2;color:var(--text-secondary);">
           <div>版本：v1.0</div>
           <div>工具总数：<span id="set-tool-count">—</span></div>
-          <div>All-in-One 工程师工具箱 — 开源、离线可用</div>
+          <div>鲁工不要慌工具箱 — 开源、离线可用</div>
         </div>
       </div>
 

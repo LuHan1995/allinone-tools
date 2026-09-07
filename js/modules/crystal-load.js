@@ -1,6 +1,4 @@
-import { debounce, formatNumber } from '../utils.js';
-
-import { generateSeries } from '../utils.js';
+import { debounce, formatNumber, generateSeries } from '../utils.js';
 
 const E12_BASE = [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82];
 const E12_CAPS = generateSeries(E12_BASE, 1000);

@@ -85,6 +85,19 @@
   flex: 1;
 }
 
+.nav-item .nav-fav {
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.nav-item .nav-fav:hover {
+  color: var(--warning);
+}
+
 .sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--border);

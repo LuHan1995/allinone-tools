@@ -275,6 +275,85 @@ table.data-table tr.best {
   box-shadow: var(--shadow);
 }
 
+.skeleton-wrapper {
+  padding: 24px;
+  animation: skeleton-fade-in 0.2s ease;
+}
+
+.skeleton-header {
+  height: 36px;
+  background: var(--border);
+  border-radius: 6px;
+  margin-bottom: 20px;
+  width: 50%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-row {
+  height: 72px;
+  background: var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-row:nth-child(2) { width: 100%; }
+.skeleton-row:nth-child(3) { width: 85%; }
+.skeleton-row:nth-child(4) { width: 70%; }
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes skeleton-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 更新提示 Toast */
+.update-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 300;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  animation: toast-slide-in 0.3s ease;
+}
+
+.update-toast.show {
+  display: flex;
+}
+
+.update-toast button {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.update-toast button:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+@keyframes toast-slide-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 /* 日历专用 */
 .calendar-grid {
   display: grid;

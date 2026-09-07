@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>鲁工不要慌工具箱 — 硬件工程师的随身工具集合</title>
+  <meta name="description" content="29个硬件工程师常用工具，涵盖电路计算、PCB设计、信号分析、嵌入式开发，离线可用，开源免费。" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/landing.css" />
+  <style>
+    .landing-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(246, 247, 251, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s;
+    }
+    [data-theme="dark"] .landing-nav {
+      background: rgba(15, 23, 42, 0.85);
+    }
+    .landing-nav-brand {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .landing-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .landing-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .landing-nav a:hover {
+      color: var(--primary);
+    }
+    .landing-nav .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--text);
+    }
+    @media (max-width: 768px) {
+      .landing-nav { padding: 10px 16px; }
+      .landing-nav a { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="landing-nav">
+    <a href="./landing.html" class="landing-nav-brand">🛠️ 鲁工不要慌</a>
+    <div class="landing-nav-actions">
+      <a href="#tools">工具</a>
+      <a href="./index.html">进入应用</a>
+      <button class="theme-toggle" id="theme-toggle" title="切换主题">🌙</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-content">
+      <div class="hero-badge">🛠️ 硬件工程师的随身工具箱</div>
+      <h1 class="hero-title">鲁工不要慌<br>工具箱</h1>
+      <p class="hero-desc">29 个工具 · 离线可用 · 即时计算 · 开源免费</p>
+      <div class="hero-actions">
+        <a href="./index.html" class="hero-btn hero-btn-primary">🚀 开始使用</a>
+        <a href="#tools" class="hero-btn hero-btn-secondary">📋 浏览工具</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong id="stat-count">29</strong><span>个工具</span></div>
+        <div><strong>6</strong><span>大分类</span></div>
+        <div><strong>0</strong><span>广告</span></div>
+      </div>
+    </div>
+    <div class="hero-scroll" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">↓ 向下滚动</div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section">
+    <h2 class="section-title">功能亮点</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>即时计算</h3>
+        <p>输入即计算，无需点击按钮，参数调整结果实时同步更新</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>离线可用</h3>
+        <p>PWA 技术缓存所有资源，无网络也能使用全部工具</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌙</div>
+        <h3>明暗双主题</h3>
+        <p>支持浅色/深色/跟随系统三种模式，夜间使用不刺眼</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>响应式设计</h3>
+        <p>桌面、平板、手机自适应，随时随地查参数算电路</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tools -->
+  <section id="tools" class="section" style="background:var(--bg);">
+    <h2 class="section-title">全部工具</h2>
+    <div class="tools-search">
+      <input type="text" id="tool-search" placeholder="搜索工具名称或描述..." />
+    </div>
+    <div class="tools-filters" id="tools-filters"></div>
+    <div class="tools-grid" id="tools-grid"></div>
+    <div id="tools-empty" style="display:none;text-align:center;padding:40px 20px;color:var(--text-secondary);">
+      未找到相关工具，试试其他关键词
+    </div>
+  </section>
+
+  <!-- Guide -->
+  <section class="section">
+    <h2 class="section-title">使用说明</h2>
+    <div class="guide-grid">
+      <div class="guide-step">
+        <div class="guide-step-num">1</div>
+        <h3>搜索或浏览</h3>
+        <p>在侧边栏搜索框输入关键词，或按分类浏览找到需要的工具</p>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">2</div>
+        <h3>输入参数</h3>
+        <p>填写电路参数，选择单位和预设值，结果实时自动计算</p>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">3</div>
+        <h3>查看结果</h3>
+        <p>查看计算结果、推荐值和公式说明，支持复制导出</p>
+      </div>
+    </div>
+    <div class="guide-shortcuts">
+      <strong>快捷键：</strong>
+      <kbd>/</kbd> 或 <kbd>Ctrl+K</kbd> 搜索 &nbsp;
+      <kbd>Esc</kbd> 关闭侧边栏 &nbsp;
+      <kbd>1~9</kbd> 切换到最近工具 &nbsp;
+      <kbd>?</kbd> 显示帮助
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div style="margin-bottom:16px;font-size:15px;color:var(--text-secondary);">准备好提升工作效率了吗？</div>
+    <a href="./index.html" class="hero-btn hero-btn-primary">🚀 进入工具箱</a>
+    <div style="margin-top:24px;font-size:13px;color:var(--text-secondary);">
+      鲁工不要慌工具箱 · 开源 · 离线可用 · 持续更新
+    </div>
+  </footer>
+
+  <script type="module">
+    import { MODULES, CATEGORY_LABELS } from './js/tools-data.js';
+
+    // ========== Theme ==========
+    function initTheme() {
+      const saved = (() => { try { return localStorage.getItem('tools_theme'); } catch { return null; } })() || 'light';
+      if (saved === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+      updateThemeIcon(saved === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : saved);
+    }
+    function toggleTheme() {
+      const saved = (() => { try { return localStorage.getItem('tools_theme'); } catch { return null; } })() || 'light';
+      const order = ['light', 'dark', 'system'];
+      const idx = order.indexOf(saved);
+      const next = order[(idx + 1) % order.length];
+      document.documentElement.setAttribute('data-theme', next === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : next);
+      try { localStorage.setItem('tools_theme', next); } catch {}
+      updateThemeIcon(next === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : next);
+    }
+    function updateThemeIcon(theme) {
+      document.getElementById('theme-toggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+    initTheme();
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      const saved = (() => { try { return localStorage.getItem('tools_theme'); } catch { return 'light'; } })() || 'light';
+      if (saved === 'system') {
+        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        updateThemeIcon(e.matches ? 'dark' : 'light');
+      }
+    });
+
+    // ========== Canvas Animation ==========
+    (function() {
+      const canvas = document.getElementById('hero-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w, h, nodes = [], particles = [];
+      const NODE_COUNT = 60;
+      const CONNECTION_DIST = 140;
+      const MOUSE_DIST = 180;
+      let mouse = { x: -1000, y: -1000 };
+
+      function resize() {
+        w = canvas.width = canvas.offsetWidth;
+        h = canvas.height = canvas.offsetHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+      });
+      canvas.addEventListener('mouseleave', () => { mouse.x = -1000; mouse.y = -1000; });
+
+      function createNodes() {
+        nodes = [];
+        for (let i = 0; i < NODE_COUNT; i++) {
+          nodes.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4,
+            r: Math.random() * 2 + 1.5,
+          });
+        }
+      }
+      createNodes();
+
+      function getColor(alpha) {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const base = isDark ? '100, 160, 255' : '37, 99, 235';
+        return `rgba(${base},${alpha})`;
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, w, h);
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+        // Update nodes
+        for (const n of nodes) {
+          n.x += n.vx;
+          n.y += n.vy;
+          if (n.x < 0 || n.x > w) n.vx *= -1;
+          if (n.y < 0 || n.y > h) n.vy *= -1;
+
+          // Mouse repulsion
+          const dx = n.x - mouse.x;
+          const dy = n.y - mouse.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < MOUSE_DIST && d > 0) {
+            const f = (MOUSE_DIST - d) / MOUSE_DIST * 0.5;
+            n.vx += (dx / d) * f;
+            n.vy += (dy / d) * f;
+          }
+
+          // Speed limit
+          const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+          if (speed > 1.2) { n.vx = (n.vx / speed) * 1.2; n.vy = (n.vy / speed) * 1.2; }
+        }
+
+        // Draw connections
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const dx = nodes[i].x - nodes[j].x;
+            const dy = nodes[i].y - nodes[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < CONNECTION_DIST) {
+              const alpha = (1 - dist / CONNECTION_DIST) * 0.25;
+              ctx.beginPath();
+              ctx.moveTo(nodes[i].x, nodes[i].y);
+              ctx.lineTo(nodes[j].x, nodes[j].y);
+              ctx.strokeStyle = getColor(alpha);
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Draw nodes
+        for (const n of nodes) {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+          ctx.fillStyle = getColor(0.5);
+          ctx.fill();
+        }
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+
+    // ========== Tools Grid ==========
+    const toolsGrid = document.getElementById('tools-grid');
+    const toolsFilters = document.getElementById('tools-filters');
+    const toolsEmpty = document.getElementById('tools-empty');
+    const searchInput = document.getElementById('tool-search');
+    const statCount = document.getElementById('stat-count');
+
+    const tools = Object.entries(MODULES)
+      .filter(([id]) => id !== 'home' && id !== 'settings')
+      .map(([id, m]) => ({ id, ...m }));
+
+    statCount.textContent = tools.length;
+
+    const categories = ['all', ...new Set(tools.map(t => t.category))];
+    let activeCat = 'all';
+
+    // Render filter buttons
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (cat === 'all' ? ' active' : '');
+      btn.dataset.cat = cat;
+      btn.textContent = cat === 'all' ? '全部' : (CATEGORY_LABELS[cat] || cat);
+      btn.addEventListener('click', () => {
+        activeCat = cat;
+        toolsFilters.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+        renderTools();
+      });
+      toolsFilters.appendChild(btn);
+    });
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    }
+
+    function renderTools() {
+      const q = (searchInput.value || '').toLowerCase().trim();
+      let visible = 0;
+      const frag = document.createDocumentFragment();
+
+      for (const t of tools) {
+        const matchCat = activeCat === 'all' || t.category === activeCat;
+        const matchSearch = !q || t.name.toLowerCase().includes(q) || (t.desc && t.desc.toLowerCase().includes(q));
+        if (matchCat && matchSearch) {
+          visible++;
+          const a = document.createElement('a');
+          a.className = 'tool-card';
+          a.href = t.external ? '#' : `./index.html#${escapeHtml(t.id)}`;
+          if (!t.external) {
+            a.addEventListener('click', (e) => {
+              e.preventDefault();
+              location.href = `./index.html#${t.id}`;
+            });
+          }
+          const catLabel = (CATEGORY_LABELS[t.category] || t.category).split(' ')[0];
+          a.innerHTML = `
+            <div class="tool-card-icon">${t.icon}</div>
+            <div class="tool-card-body">
+              <div class="tool-card-title">${escapeHtml(t.name)}</div>
+              <div class="tool-card-desc">${escapeHtml(t.desc || '')}</div>
+              <span class="tool-card-tag">${escapeHtml(catLabel)}</span>
+            </div>
+          `;
+          frag.appendChild(a);
+        }
+      }
+
+      toolsGrid.innerHTML = '';
+      toolsGrid.appendChild(frag);
+      toolsEmpty.style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    renderTools();
+    searchInput.addEventListener('input', renderTools);
+  </script>
+</body>
+</html>
