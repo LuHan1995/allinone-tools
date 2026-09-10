@@ -37,6 +37,7 @@ export const MODULES = {
   'termination': { name: '端接电阻计算', category: 'signal', icon: '🔚', desc: '串联/并联/Thevenin/AC/差分端接电阻选型与SI计算', file: 'modules/termination.js' },
   'length-match': { name: '等长Layout查询', category: 'pcb', icon: '📏', desc: '高速接口等长要求速查与层叠等长补偿计算', file: 'modules/length-match.js' },
   'knowledge': { name: '硬件知识库', category: 'general', icon: '📚', desc: '人人都能学硬件 · ima 共享知识库', file: 'modules/knowledge.js' },
+  'timing-diagram': { name: '时序图绘制', category: 'signal', icon: '📈', desc: '类 WaveDrom 语法在线绘制时序图，支持导出 SVG/PNG', file: 'modules/timing-diagram.js' },
   'settings': { name: '设置', category: 'general', icon: '⚙️', desc: '主题、数据管理与关于', file: 'modules/settings.js' },
 };
 
