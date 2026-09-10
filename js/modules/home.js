@@ -1,6 +1,6 @@
 import { escapeHtml } from '../utils.js';
 
-const CATEGORY_ORDER = ['general', 'circuit', 'pcb', 'signal', 'embedded', 'network'];
+const CATEGORY_ORDER = ['general', 'power', 'analog', 'clock', 'signal', 'embedded', 'pcb', 'network'];
 
 export default {
   init(container) {
