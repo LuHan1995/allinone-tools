@@ -145,7 +145,6 @@ export default {
       }
 
       resultEl.style.color = 'var(--primary)';
-      const tauMs = tau * 1e3;
       if (t >= 1) {
         resultEl.innerHTML = `<strong>${formatNumber(t)} s</strong> &nbsp;|&nbsp; τ = ${formatNumber(tau)} s`;
       } else if (t >= 1e-3) {

@@ -112,8 +112,12 @@ function createNavItem(item, favorites) {
       toggleFavorite(item.id);
       return;
     }
-    location.hash = item.id;
-    if (window.innerWidth <= 768) closeSidebar();
+    if (item.external) {
+      navigateTo(item.id);
+    } else {
+      location.hash = item.id;
+      if (window.innerWidth <= 768) closeSidebar();
+    }
   });
   return el;
 }
@@ -241,6 +245,33 @@ function navigateTo(hash) {
   currentModule = null;
   delete window._openHelpModal;
 
+  if (mod.external) {
+    const isElectron = typeof window !== 'undefined' && window.electronAPI && window.electronAPI.isElectron;
+    container.innerHTML = `
+      <div class="card" style="text-align:center;padding:48px 24px;">
+        <div style="font-size:48px;margin-bottom:16px;">🔌</div>
+        <h2 style="margin-bottom:12px;">串口助手</h2>
+        <p style="color:var(--text-secondary);margin-bottom:24px;">串口助手为 Windows 可执行程序。${isElectron ? '<br>点击下方按钮直接启动。' : '<br>请直接运行 ref/串口助手.exe。<br>未来计划支持 WebSerial API。'}</p>
+        <button class="btn" id="serial-launch-btn">${isElectron ? '启动串口助手' : '我知道了'}</button>
+      </div>
+    `;
+    const btn = document.getElementById('serial-launch-btn');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        if (isElectron) {
+          const result = await window.electronAPI.openSerial();
+          if (!result.success) {
+            alert(result.error || '启动失败');
+          }
+        } else {
+          alert('请直接运行 ref/串口助手.exe');
+        }
+      });
+    }
+    recordRecent(id);
+    return;
+  }
+
   import('./' + mod.file).then(m => {
     const moduleObj = m.default || m;
     if (moduleObj && typeof moduleObj.init === 'function') {
@@ -350,7 +381,7 @@ function bootApp() {
   });
 
   // Listen for SW update ready
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && !(window.electronAPI && window.electronAPI.isElectron)) {
     navigator.serviceWorker.addEventListener('message', (e) => {
       if (e.data && e.data.type === 'UPDATE_READY') {
         const toast = document.getElementById('update-toast');

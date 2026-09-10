@@ -70,8 +70,8 @@ export default {
             </div>
             <div class="grid-2">
               <div class="input-group">
-                <label>板子数量 (pcs)</label>
-                <input type="number" id="pcb-qty" min="1" required />
+                <label>名称</label>
+                <input type="text" id="pcb-name" placeholder="请输入板子名称" required />
               </div>
               <div class="input-group">
                 <label>拼版款数</label>
@@ -128,6 +128,15 @@ export default {
                 </select>
               </div>
             </div>
+            <div class="grid-2" id="pcb-innercopper-row" style="display:none;">
+              <div class="input-group">
+                <label>铜箔厚度(内层)</label>
+                <select id="pcb-innercopper">
+                  <option value="0.5oz">0.5oz</option>
+                  <option value="1oz" selected>1oz</option>
+                </select>
+              </div>
+            </div>
             <div class="grid-2">
               <div class="input-group">
                 <label>阻焊颜色</label>
@@ -161,7 +170,7 @@ export default {
                   <option value="3.5/3.5mil">3.5/3.5mil</option>
                   <option value="4/4mil">4/4mil</option>
                   <option value="5/5mil">5/5mil</option>
-                  <option value="6/6mil↑">6/6mil↑</option>
+                  <option value="6/6mil↑" selected>6/6mil↑</option>
                   <option value="8/8mil↑">8/8mil↑</option>
                   <option value="10/10mil↓">10/10mil↓</option>
                   <option value="20/20mil↑">20/20mil↑</option>
@@ -173,7 +182,7 @@ export default {
                   <option value="0.15">0.15</option>
                   <option value="0.2">0.2</option>
                   <option value="0.25">0.25</option>
-                  <option value="0.3">0.3</option>
+                  <option value="0.3" selected>0.3</option>
                   <option value="0.35">0.35</option>
                   <option value="0.4">0.4</option>
                   <option value="0.5">0.5</option>
@@ -219,6 +228,13 @@ export default {
                   <option value="无铅喷锡+选择性沉金">无铅喷锡+选择性沉金</option>
                   <option value="无铅喷锡+选择性电镀金">无铅喷锡+选择性电镀金</option>
                 </select>
+                <div class="input-group" id="pcb-goldthickness-wrap" style="display:none;margin-top:8px;">
+                  <label>沉金厚度</label>
+                  <select id="pcb-goldthickness">
+                    <option value="1u" selected>1u</option>
+                    <option value="2u">2u</option>
+                  </select>
+                </div>
               </div>
               <div class="input-group">
                 <label>阻抗</label>
@@ -287,17 +303,18 @@ export default {
 
     function getFormData() {
       return {
+        boardName: container.querySelector('#pcb-name').value,
         materialType: container.querySelector('#pcb-material').value,
         layerCount: container.querySelector('#pcb-layers').value,
         hdiType: container.querySelector('#pcb-hdi').value,
         boardLength: container.querySelector('#pcb-length').value,
         boardWidth: container.querySelector('#pcb-width').value,
-        boardQuantity: container.querySelector('#pcb-qty').value,
         deliveryMethod: container.querySelector('#pcb-delivery').value,
         panelCount: container.querySelector('#pcb-panel').value,
         orderStage: container.querySelector('#pcb-stage').value,
         boardThickness: container.querySelector('#pcb-thickness').value,
         copperThickness: container.querySelector('#pcb-copper').value,
+        innerCopperThickness: container.querySelector('#pcb-innercopper').value,
         solderMaskColor: container.querySelector('#pcb-mask').value,
         legendColor: container.querySelector('#pcb-legend').value,
         minLineWidth: container.querySelector('#pcb-minline').value,
@@ -305,6 +322,7 @@ export default {
         solderMaskCoverage: container.querySelector('#pcb-maskcover').value,
         testingMethod: container.querySelector('#pcb-test').value,
         surfaceFinish: container.querySelector('#pcb-finish').value,
+        goldThickness: container.querySelector('#pcb-goldthickness').value,
         impedance: container.querySelector('#pcb-impedance').value,
         formingMethod: container.querySelector('#pcb-forming').value,
         halfHole: container.querySelector('#pcb-halfhole').value,
@@ -313,16 +331,19 @@ export default {
     }
 
     function generateSpecification(formData) {
+      const isENIG = formData.surfaceFinish.includes('沉金');
+      const layerNum = parseInt(formData.layerCount, 10);
+      const hasInnerLayer = layerNum > 2 || formData.layerCount === '更多层数';
       return `PCB制作工艺规范
  生成日期: ${new Date().toLocaleDateString()}
 
 ==================== PCB基本信息 ====================
 
+名称: ${formData.boardName}
 板材类别: ${formData.materialType}
 板子层数: ${formData.layerCount}
 HDI(盲埋孔): ${formData.hdiType}
 板子尺寸: ${formData.boardLength}cm × ${formData.boardWidth}cm
-板子数量: ${formData.boardQuantity}pcs
 出货方式: ${formData.deliveryMethod}
 拼版款数: ${formData.panelCount}
 订单阶段: ${formData.orderStage}
@@ -330,14 +351,16 @@ HDI(盲埋孔): ${formData.hdiType}
 ==================== PCB工艺信息 ====================
 
 板子厚度: ${formData.boardThickness}mm
-铜箔厚度(外层): ${formData.copperThickness}
+铜箔厚度(外层): ${formData.copperThickness}${hasInnerLayer ? `
+铜箔厚度(内层): ${formData.innerCopperThickness}` : ''}
 阻焊颜色: ${formData.solderMaskColor}
 字符颜色: ${formData.legendColor}
 最小线宽/线距: ${formData.minLineWidth}
 最小孔径: ${formData.minHoleSize}mm
 阻焊覆盖: ${formData.solderMaskCoverage}
 测试方式: ${formData.testingMethod}
-焊盘表面处理: ${formData.surfaceFinish}
+焊盘表面处理: ${formData.surfaceFinish}${isENIG ? `
+沉金厚度: ${formData.goldThickness}` : ''}
 阻抗: ${formData.impedance}
 成型方式: ${formData.formingMethod}
 半孔: ${formData.halfHole}
@@ -353,6 +376,20 @@ HDI(盲埋孔): ${formData.hdiType}
 PCB制作工艺生成器
 生成时间: ${new Date().toLocaleString()}`;
     }
+
+    const layersSelect = container.querySelector('#pcb-layers');
+    const finishSelect = container.querySelector('#pcb-finish');
+    const innerCopperRow = container.querySelector('#pcb-innercopper-row');
+    const goldThicknessWrap = container.querySelector('#pcb-goldthickness-wrap');
+
+    function updateConditionalFields() {
+      const layerNum = parseInt(layersSelect.value, 10);
+      innerCopperRow.style.display = (layerNum > 2 || layersSelect.value === '更多层数') ? '' : 'none';
+      goldThicknessWrap.style.display = finishSelect.value.includes('沉金') ? '' : 'none';
+    }
+    layersSelect.addEventListener('change', updateConditionalFields);
+    finishSelect.addEventListener('change', updateConditionalFields);
+    updateConditionalFields();
 
     generateBtn.addEventListener('click', () => {
       if (!form.checkValidity()) {
@@ -385,6 +422,7 @@ PCB制作工艺生成器
     resetBtn.addEventListener('click', () => {
       if (confirm('确定要重置所有表单数据吗？')) {
         form.reset();
+        updateConditionalFields();
         resultArea.style.display = 'none';
       }
     });

@@ -1,0 +1,4 @@
+node_modules/
+dist/
+*.exe
+!ref/串口助手.exe

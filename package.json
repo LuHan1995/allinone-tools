@@ -1,0 +1,52 @@
+{
+  "name": "lugong-tools",
+  "productName": "鲁工不要慌工具箱",
+  "version": "1.0.0",
+  "description": "硬件工程师的随身工具集合",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.lugong.tools",
+    "productName": "鲁工不要慌工具箱",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "landing.html",
+      "manifest.json",
+      "sw.js",
+      "css/**/*",
+      "js/**/*",
+      "electron-main.js",
+      "electron-preload.js"
+    ],
+    "extraResources": [
+      {
+        "from": "ref",
+        "to": "ref",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^26.0.0"
+  }
+}
